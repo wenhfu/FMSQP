@@ -1,0 +1,11 @@
+function g = gradf(x)
+f1 = sin(2*pi*x(1))^3*sin(2*pi*x(2));
+f2 = x(1)^3*(x(1)+x(2));
+% f = f1/f2;
+gf11 = 6*pi*sin(2*pi*x(1))^2*cos(2*pi*x(1))*sin(2*pi*x(2));
+gf12 = 2*pi*cos(2*pi*x(2))*sin(2*pi*x(1))^3;
+gf21 = 4*x(1)^3+3*x(1)^2*x(2);
+gf22 = x(1)^3;
+g(1,1) = (gf11*f2-gf21*f1)/(f2^2);
+g(2,1) = (gf12*f2-gf22*f1)/(f2^2);
+g = -g;
