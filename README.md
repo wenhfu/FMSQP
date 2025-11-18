@@ -93,6 +93,7 @@ fprintf('Number of function evaluations: %d\n', output.nf);
 fprintf('Number of gradient evaluations: %d\n', output.ng);
 fprintf('Final constraint violation (max): %g\n', max(output.vx));
 fprintf('Elapsed time: %g seconds\n', output.time);
+````
 
 ---
 
