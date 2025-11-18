@@ -1,177 +1,140 @@
-# FMSQP.m — A MATLAB Feasible-Mode SQP Solver
+# FMSQP.m — A MATLAB Multi‑Start Filter SQP Solver for Inequality‑Only Problems
 
-This repository provides **FMSQP.m**, a standalone MATLAB implementation of a **F**ilter-based **M**ulti-start **S**equential **Q**uadratic **P**rogramming (SQP) method for solving constrained nonlinear optimization problems.  
-The solver is lightweight, readable, and designed for research prototyping.
+This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential Quadratic Programming (SQP)** solver tailored for nonlinear optimization with **inequality constraints only**. The method supports **multiple starting points** and uses a **filter technique** to improve global convergence, especially to escape infeasible stable points or poor local minima.
 
 ---
 
 ## 1. Overview
 
-`FMSQP.m` solves constrained optimization problems of the form:
+`FMSQP.m` solves optimization problems of the form:
 
-$$
+\[
 \begin{aligned}
 \min_x\quad & f(x) \\
-\text{s.t.}\quad & c_i(x)=0,\quad i=1,\dots,m_e, \\
-& h_j(x)\le 0,\quad j=1,\dots,m_i.
+\text{s.t.}\quad & c_i(x) \le 0,\; i = 1,\dots,m, \\
+& \ell \le x \le u.
 \end{aligned}
-$$
+\]
 
-**Important:** the iterates produced by the algorithm are **not required** to be feasible at every step. When the original problem is infeasible, the solver returns a point that minimizes a suitable measure of constraint violation while keeping the objective value small (i.e., it attempts to find a point that best satisfies the constraints and has a low objective).
+Key properties:
 
-The implementation is fully written in MATLAB without external dependencies, making it easy to read and extend.
+- It does **not require intermediate iterates to be feasible**.  
+- If the problem is infeasible, the algorithm aims to find a point that **minimizes violation** of the inequality constraints while also trying to reduce the objective.  
+- By running from **multiple initial points**, it increases the chance of finding a good compromise or a feasible solution.  
+- A **filter strategy** is employed: iterates that are dominated in terms of constraint violation and objective value are rejected, helping to avoid convergence to bad infeasible points or poor local minima.
 
 ---
 
 ## 2. Key Features
 
-- Pure MATLAB implementation in a **single file**: `FMSQP.m`
-- Handles:
-  - Nonlinear objectives
-  - Equality constraints
-  - Inequality constraints
-- Uses gradient information
-- Includes example problem files (`Ex3.*`, `Ex5.*`) and a main driver (`MainG.m`) for running a benchmark test problem library.
+- **Single-file implementation** in MATLAB: `FMSQP.m`  
+- Supports:
+  - Nonlinear objective  
+  - Nonlinear inequality constraints  
+  - Box (bound) constraints  
+- **Multi-start**: you can supply multiple initial guesses to explore different basins.  
+- **Filter acceptance mechanism**: no penalty function needed — filter handles trade-off between feasibility and optimality.  
+- Suitable for research, algorithm development, and numerical experiments.
 
 ---
 
 ## 3. Function Interface
 
-Call the solver using:
-
-### Updated Function Interface (correct call format)
-
-The actual solver signature is:
+Call format:
 
 ```matlab
-function [x, fx, output] = FMSQP(X0, opts)
+[x, fx, output] = FMSQP(X0, opts);
 ````
-### Required User-Supplied Function Files
 
-The solver relies on **four user-defined MATLAB function files** that define the objective and constraint system:
+* `X0` — initial points, an (n \times p) matrix where each column is a different starting point (multi-start).
+* `opts` — options struct with fields:
 
-| File       | Description |
-|------------|-------------|
-| `funf.m`   | Returns the **objective function value** \( f(x) \). |
-| `gradf.m`  | Returns the **gradient of the objective** \( \nabla f(x) \). |
-| `func.m`   | Returns the **constraint function values** \( c(x) \le 0 \). |
-| `gradc.m`  | Returns the **Jacobian (gradient matrix)** of the constraints \( \nabla c(x) \). |
+  * `opts.varbose` (verbosity, default `0`)
+  * `opts.epsilon` (tolerance, default `1e-5`)
+  * `opts.nmax` (maximum number of iterations, default `500`)
 
-**Inputs**
+Output:
 
-* `X0` — initial point (column vector).
-* `opts` — options structure (optional). Recognized fields:
-
-  * `opts.varbose` — display verbosity (default `0`).
-  * `opts.epsilon` — stopping tolerance (default `1e-5`).
-  * `opts.nmax` — maximum iterations (default `500`).
-
-**Outputs**
-
-* `x` — final iterate returned by the solver.
+* `x` — final point (from one of the runs) that passed the filter or best compromise.
 * `fx` — objective value at `x`.
-* `output` — struct with diagnostic information.
+* `output` — struct with diagnostic info: number of iterations, number of function / gradient evaluations, final constraint violations, time, and other history.
 
-### Output Structure (`output`)
+---
 
-The `output` struct returned by `FMSQP` contains the following fields:
-
-| Field     | Description |
-|-----------|-------------|
-| `m`       | Total number of constraints (size of `c(x)`). |
-| `vx`      | Final constraint violation at `x` (vector of `c(x)` values). |
-| `nit`     | Number of iterations performed. |
-| `nf`      | Number of objective function evaluations. |
-| `ng`      | Number of gradient evaluations (objective and/or constraints). |
-| `time`    | Total elapsed computation time in seconds (`toc`). |
-
-**Example: inspecting output**
+## 4. Example Usage
 
 ```matlab
-fprintf('Number of iterations: %d\n', output.nit);
-fprintf('Number of function evaluations: %d\n', output.nf);
-fprintf('Number of gradient evaluations: %d\n', output.ng);
-fprintf('Final constraint violation (max): %g\n', max(output.vx));
-fprintf('Elapsed time: %g seconds\n', output.time);
-````
+% Define multiple initial points (each column is one point)
+X0 = [0, 1, 0, 1;
+      0, 0, 1, 1];
 
----
+opts.varbose = 1;
+opts.epsilon = 1e-6;
+opts.nmax = 300;
 
-## 4. Minimal Example
+[x, fx, output] = FMSQP(X0, opts);
 
-```matlab
-% Objective function
-fun = @(x) deal( x(1)^2 + x(2)^2, [2*x(1); 2*x(2)] );
-
-% Initial points (each column is one starting point)
-x0 = [0, 0; 
-      1, 0; 
-      0, 1; 
-      1, 1]';
-
-% Run solver
-[x, lambda, info] = FMSQP(X0);
+fprintf('Found x = [%g, %g]\n', x(1), x(2));
+fprintf('f(x) = %g\n', fx);
+fprintf('Constraint violation: %g\n', max(output.vx));
 ```
 
 ---
 
-## 5. Algorithm Summary
+## 5. Algorithmic Overview
 
-`FMSQP.m` implements a **multi-start SQP framework combined with a filter technique**:
+1. From **each initial point**, run an SQP iteration.
+2. At every iteration:
 
-1. Generate multiple initial points and run SQP iterations from each.  
-2. Evaluate objective, gradient, and constraint functions at the current iterate.  
-3. Linearize inequality constraints and build a QP subproblem.  
-4. Solve the QP to obtain a search direction.  
-5. Perform step-size selection (line search).  
-6. Update primal variables and multipliers.  
-7. Use a **filter** to discard iterates that are dominated in terms of objective and constraint violation, helping the algorithm:  
-   - Avoid infeasible stationary points  
-   - Escape local minima that are not globally optimal  
-8. Continue until tolerances for KKT residuals or constraint violation are satisfied or maximum iterations are reached.  
+   * Evaluate objective ( f(x) ) and its gradient.
+   * Evaluate constraint violations ( c(x) ) and compute their gradients if needed.
+   * Linearize the constraints around the current point.
+   * Build and solve a quadratic programming (QP) subproblem.
+   * Use a **line search** to get a trial step.
+   * Use a **filter** to decide whether to accept the trial point:
 
-This combination of **multi-start strategy + filter method** allows the solver to explore multiple basins of attraction and improve the chance of finding a high-quality feasible solution or a best-effort point when the problem is infeasible.
+     * A point is accepted if it is not dominated in both objective value and constraint violation by any point in the filter.
+     * Otherwise, it is rejected, which helps the method avoid bad or infeasible regions.
+3. Continue until convergence criteria (optimality and violation tolerances) are met or maximum iterations reached.
+4. Among all runs (from different starts), pick the best accepted point according to the filter.
 
-
----
-
-
-## 6. Repository Structure
-
-```
-FMSQP/
-├── FMSQP.m        % Main solver
-├── MainG.m        % Benchmark example
-├── Ex*          % Example problems (Ex3.10, Ex5.1, etc.)
-└── README.md
-```
+This **multi-start + filter** strategy provides good robustness: the method can escape infeasible stable points and poor local minima.
 
 ---
 
-## 7. Notes
+## 6. Required User-Defined Functions
 
-* Intended for **small or medium-scale** optimization problems
-* For large-scale applications, consider:
+You should provide these four MATLAB files in the same directory / on path:
 
-  * sparse matrices
-  * structure-exploiting BFGS updates
-  * iterative solvers
+* `funf.m` — computes ( f(x) )
+* `gradf.m` — computes ( \nabla f(x) )
+* `func.m` — computes constraint vector ( c(x) \le 0 )
+* `gradc.m` — computes Jacobian ( \nabla c(x) ) (each column is gradient of one constraint)
+
+---
+
+## 7. Output Structure
+
+The `output` struct returned by `FMSQP` includes:
+
+* `output.m` — number of constraints
+* `output.vx` — final constraint violation values
+* `output.nit` — number of iterations
+* `output.nf` — number of function evaluations
+* `output.ng` — number of gradient evaluations
+* `output.time` — elapsed time (in seconds)
 
 ---
 
 ## 8. License
 
-This project is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of this software, provided that the following conditions are met:
-
-1. The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-2. The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement.
-
-For the full license text, see the [LICENSE](LICENSE) file.
+This project is licensed under the **MIT License**.
+See the [LICENSE](LICENSE) file for full terms.
 
 ---
 
-## 10. Contact
+## 9. Contact / Contribution
 
-Author: **Wenhao Fu**
-E-mail: wenhfu@usts.edu.cn
-For questions or suggestions, please open an issue on GitHub.
+* **Author**: wenhfu
+* Contributions welcome! Feel free to open issues or pull requests to improve the multi-start logic, filter strategy, or performance.
+
