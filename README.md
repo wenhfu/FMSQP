@@ -103,22 +103,14 @@ fprintf('Elapsed time: %g seconds\n', output.time);
 % Objective function
 fun = @(x) deal( x(1)^2 + x(2)^2, [2*x(1); 2*x(2)] );
 
-% Initial point
-x0 = [1; 1];
-
-% No constraints
-Aeq = []; beq = [];
-Aineq = []; bineq = [];
-lb = []; ub = [];
-
-% Options
-options.MaxIter = 100;
-options.TolX = 1e-6;
-options.TolFun = 1e-6;
-options.Display = 'on';
+% Initial points (each column is one starting point)
+x0 = [0, 0; 
+      1, 0; 
+      0, 1; 
+      1, 1]';
 
 % Run solver
-[x, lambda, info] = FMSQP(fun, x0, Aeq, beq, Aineq, bineq, lb, ub, options);
+[x, lambda, info] = FMSQP(X0);
 ```
 
 ---
