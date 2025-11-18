@@ -1,4 +1,4 @@
-# FMSQP.m — A MATLAB Multi‑Start Filter SQP Solver for Inequality‑Only Problems
+# FMSQP.m — A MATLAB Filter-based Multi‑start SQP Solver for Inequality‑Only Problems
 
 This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential Quadratic Programming (SQP)** solver tailored for nonlinear optimization with **inequality constraints only**. The method supports **multiple starting points** and uses a **filter technique** to improve global convergence, especially to escape infeasible stationary points or poor local minima.
 
