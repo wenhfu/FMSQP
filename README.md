@@ -8,13 +8,13 @@ This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential 
 
 `FMSQP.m` solves optimization problems of the form:
 
-\[
+$$
 \begin{aligned}
 \min_x\quad & f(x) \\
 \text{s.t.}\quad & c_i(x) \le 0,\; i = 1,\dots,m, \\
 & \ell \le x \le u.
 \end{aligned}
-\]
+$$
 
 Key properties:
 
