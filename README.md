@@ -11,8 +11,7 @@ This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential 
 $$
 \begin{aligned}
 \min_x\quad & f(x) \\
-\text{s.t.}\quad & c_i(x) \le 0,\; i = 1,\dots,m, \\
-& \ell \le x \le u.
+\text{s.t.}\quad & c_i(x) \le 0,\; i = 1,\dots,m.
 \end{aligned}
 $$
 
