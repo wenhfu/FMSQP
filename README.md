@@ -86,8 +86,8 @@ fprintf('Constraint violation: %g\n', output.vx);
 1. From **each initial point**, run an SQP iteration.
 2. At every iteration:
 
-   * Evaluate objective $ f(x) $ and its gradient.
-   * Evaluate constraint violations $ c(x) $ and compute their gradients if needed.
+   * Evaluate objective $f(x)$ and its gradient.
+   * Evaluate constraint violations $c(x)$ and compute their gradients if needed.
    * Linearize the constraints around the current point.
    * Build and solve a feasible quadratic programming subproblem.
    * Use a **line search** to get a trial step.
@@ -107,9 +107,9 @@ This **multi-start + filter** strategy provides good robustness: the method can 
 You should provide these four MATLAB files in the same directory / on path:
 
 * `funf.m` — computes $f(x)$
-* `gradf.m` — computes $ \nabla f(x) $
-* `func.m` — computes constraint vector $ c(x) \le 0 $
-* `gradc.m` — computes Jacobian $ \nabla c(x) $ (each column is gradient of one constraint)
+* `gradf.m` — computes $\nabla f(x)$
+* `func.m` — computes constraint vector $c(x) \le 0$
+* `gradc.m` — computes Jacobian $\nabla c(x)$ (each column is gradient of one constraint)
 
 ---
 
