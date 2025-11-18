@@ -106,7 +106,7 @@ This **multi-start + filter** strategy provides good robustness: the method can 
 
 You should provide these four MATLAB files in the same directory / on path:
 
-* `funf.m` — computes $ f(x) $
+* `funf.m` — computes $f(x)$
 * `gradf.m` — computes $ \nabla f(x) $
 * `func.m` — computes constraint vector $ c(x) \le 0 $
 * `gradc.m` — computes Jacobian $ \nabla c(x) $ (each column is gradient of one constraint)
