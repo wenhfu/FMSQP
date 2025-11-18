@@ -46,7 +46,7 @@ Call format:
 [x, fx, output] = FMSQP(X0, opts);
 ````
 
-* `X0` — initial points, an $n \times J$ matrix where each column is a different starting point (multi-start).
+* `X0` — initial points, an $n \times J$ matrix where each column is a different starting point (multi-start), $J$ is the number of iterate sequences.
 * `opts` — options struct with fields:
 
   * `opts.varbose` (verbosity, default `0`)
