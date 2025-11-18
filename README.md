@@ -1,6 +1,6 @@
 # FMSQP.m — A MATLAB Multi‑Start Filter SQP Solver for Inequality‑Only Problems
 
-This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential Quadratic Programming (SQP)** solver tailored for nonlinear optimization with **inequality constraints only**. The method supports **multiple starting points** and uses a **filter technique** to improve global convergence, especially to escape infeasible stable points or poor local minima.
+This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential Quadratic Programming (SQP)** solver tailored for nonlinear optimization with **inequality constraints only**. The method supports **multiple starting points** and uses a **filter technique** to improve global convergence, especially to escape infeasible stationary points or poor local minima.
 
 ---
 
@@ -11,7 +11,7 @@ This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential 
 $$
 \begin{aligned}
 \min_x\quad & f(x) \\
-\text{s.t.}\quad & c_i(x) \le 0,\; i = 1,\dots,m.
+\text{s.t.}\quad & c_i(x) \le 0,\ i = 1,\dots,m.
 \end{aligned}
 $$
 
@@ -30,7 +30,6 @@ Key properties:
 - Supports:
   - Nonlinear objective  
   - Nonlinear inequality constraints  
-  - Box (bound) constraints  
 - **Multi-start**: you can supply multiple initial guesses to explore different basins.  
 - **Filter acceptance mechanism**: no penalty function needed — filter handles trade-off between feasibility and optimality.  
 - Suitable for research, algorithm development, and numerical experiments.
@@ -45,7 +44,7 @@ Call format:
 [x, fx, output] = FMSQP(X0, opts);
 ````
 
-* `X0` — initial points, an (n \times p) matrix where each column is a different starting point (multi-start).
+* `X0` — initial points, an \(n \times J\) matrix where each column is a different starting point (multi-start).
 * `opts` — options struct with fields:
 
   * `opts.varbose` (verbosity, default `0`)
@@ -56,7 +55,7 @@ Output:
 
 * `x` — final point (from one of the runs) that passed the filter or best compromise.
 * `fx` — objective value at `x`.
-* `output` — struct with diagnostic info: number of iterations, number of function / gradient evaluations, final constraint violations, time, and other history.
+* `output` — struct with diagnostic info: number of iterations, number of function / gradient evaluations, final constraint violations, and time.
 
 ---
 
@@ -75,7 +74,7 @@ opts.nmax = 300;
 
 fprintf('Found x = [%g, %g]\n', x(1), x(2));
 fprintf('f(x) = %g\n', fx);
-fprintf('Constraint violation: %g\n', max(output.vx));
+fprintf('Constraint violation: %g\n', output.vx);
 ```
 
 ---
@@ -88,7 +87,7 @@ fprintf('Constraint violation: %g\n', max(output.vx));
    * Evaluate objective ( f(x) ) and its gradient.
    * Evaluate constraint violations ( c(x) ) and compute their gradients if needed.
    * Linearize the constraints around the current point.
-   * Build and solve a quadratic programming (QP) subproblem.
+   * Build and solve a feasible quadratic programming subproblem.
    * Use a **line search** to get a trial step.
    * Use a **filter** to decide whether to accept the trial point:
 
@@ -97,7 +96,7 @@ fprintf('Constraint violation: %g\n', max(output.vx));
 3. Continue until convergence criteria (optimality and violation tolerances) are met or maximum iterations reached.
 4. Among all runs (from different starts), pick the best accepted point according to the filter.
 
-This **multi-start + filter** strategy provides good robustness: the method can escape infeasible stable points and poor local minima.
+This **multi-start + filter** strategy provides good robustness: the method can escape infeasible stationary points and poor local minima.
 
 ---
 
@@ -105,10 +104,10 @@ This **multi-start + filter** strategy provides good robustness: the method can 
 
 You should provide these four MATLAB files in the same directory / on path:
 
-* `funf.m` — computes ( f(x) )
-* `gradf.m` — computes ( \nabla f(x) )
-* `func.m` — computes constraint vector ( c(x) \le 0 )
-* `gradc.m` — computes Jacobian ( \nabla c(x) ) (each column is gradient of one constraint)
+* `funf.m` — computes \( f(x) \)
+* `gradf.m` — computes \( \nabla f(x) \)
+* `func.m` — computes constraint vector \( c(x) \le 0 \)
+* `gradc.m` — computes Jacobian \( \nabla c(x) \) (each column is gradient of one constraint)
 
 ---
 
@@ -134,6 +133,7 @@ See the [LICENSE](LICENSE) file for full terms.
 
 ## 9. Contact / Contribution
 
-* **Author**: wenhfu
+* **Author**: Wenhao Fu
+* **E-mail**: wenhfu@usts.edu.cn
 * Contributions welcome! Feel free to open issues or pull requests to improve the multi-start logic, filter strategy, or performance.
 
