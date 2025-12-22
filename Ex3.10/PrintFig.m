@@ -1,9 +1,10 @@
-clear;clc
+% clear;clc
 n = 4;
 EPS0 = [1e-0,1e-1,1e-2,1e-3,1e-4,1e-5];
 Data_u = [];
 
-x_star = [0,1,2,-1]' % x_star
+fprintf('x_star:\n')
+x_star = [0,1,2,-1]'; % x_star
 k=1;
 for eps0 = EPS0
 xold = x_star+eps0;
@@ -18,7 +19,8 @@ Delta_u(k,1) = uxold; k=k+1;
 fprintf('%.0e & %.4f & %.e & %.0e & %.e & %.0e \\\\\n',eps0,fxold,vxold,norm(dk),lkv,uxold);
 end
 
-x_a = [-0.0159,-1.1277,1.1118,-1.3800]' % x_a
+fprintf('\nx_a:\n')
+x_a = [-0.0159,-1.1277,1.1118,-1.3800]'; % x_a
 k=1;
 for eps0 = EPS0
 xold = x_a+eps0;
@@ -33,8 +35,8 @@ Delta_u(k,2) = uxold; k=k+1;
 fprintf('%.0e & %.4f & %.4f & %.0e & %.4f & %.0e \\\\\n',eps0,fxold,vxold,norm(dk),lkv,uxold);
 end
 
-
-x_b = [-0.0351,-1.5525,1.5174,1.2325]' % x_b
+fprintf('\nx_b:\n')
+x_b = [-0.0351,-1.5525,1.5174,1.2325]'; % x_b
 k=1;
 for eps0 = EPS0
 xold = x_b+eps0;

@@ -1,6 +1,6 @@
 clear; warning('off');  clc
 Example{1}.Name = "G1"; Example{1}.n = 13; Example{1}.fstar = -15.00;
-Example{2}.Name = "G2"; Example{2}.n = 20; Example{2}.fstar = -0.8036; %***** failed non-NLP
+Example{2}.Name = "G2"; Example{2}.n = 20; Example{2}.fstar = -0.8036; %***** not a NLP
 Example{3}.Name = "G3"; Example{3}.n = 10; Example{3}.fstar = -1.00;
 Example{4}.Name = "G4"; Example{4}.n = 5; Example{4}.fstar = -30665.539;
 Example{5}.Name = "G5"; Example{5}.n = 4; Example{5}.fstar = 5126.498;
@@ -10,7 +10,7 @@ Example{8}.Name = "G8"; Example{8}.n = 2; Example{8}.fstar = -0.095825;
 Example{9}.Name = "G9"; Example{9}.n = 7; Example{9}.fstar = 680.63;
 Example{10}.Name = "G10"; Example{10}.n = 8; Example{10}.fstar = 7049.331; % ***** failed 
 Example{11}.Name = "G11"; Example{11}.n = 2; Example{11}.fstar = 0.75;
-Example{12}.Name = "G12"; Example{12}.n = 3; Example{12}.fstar = -1.00; % non-NLP
+Example{12}.Name = "G12"; Example{12}.n = 3; Example{12}.fstar = -1.00; % not a NLP
 Example{13}.Name = "G13"; Example{13}.n = 5; Example{13}.fstar = 0.05395;
 
 Fail_idx = [2,12];
@@ -30,9 +30,7 @@ for idx = 1:13
         Example{idx}.nf = [];
         Example{idx}.ng= [];
     else
-        % run("MainNEQ.m")
-        [x,fx,output] = FMSQP(X0);
-        % [x,fx,output] = FMSQP(fx,cx,X0,opts);
+        [x,fx,output] = FMSQP(@funf,@gradf,@func,@gradc,X0);
         fprintf('       Numerical f(x): ')
         fprintf('%.4f ',fx);
         Example{idx}.f_num = fx;
@@ -56,11 +54,11 @@ for idx = 1:13
     end
 end
 
-function [f,gf] = fx(x,funf,gradf)
-f = funf(x);
-gf = gradf(x);
-end
-function [c,gc] = cx(x,func,gradc)
-c = func(x);
-gc = gradc(x);
-end
+% function [f,gf] = fx(x,funf,gradf)
+% f = funf(x);
+% gf = gradf(x);
+% end
+% function [c,gc] = cx(x,func,gradc)
+% c = func(x);
+% gc = gradc(x);
+% end

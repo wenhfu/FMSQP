@@ -1,20 +1,14 @@
-function [x,fx,output] = FMSQP(X0,opts)
-% [x,fval,exitflag,output,lambda] = NPFopt(funf,func,x0,MF,opts)
-% function [x,fval,exitflag,output,lambda] = FMSQP(fx,cx,X0,opts)
+function [x,fx,output] = FMSQP(funf,gradf,func,gradc,X0,opts)
 gamma = 0.6; eps_u = 10; eta = 1e-3; epsilon = 1e-5; 
 nmax = 500; sigma0 = 1; sigma = sigma0; 
 nit = 0; nf = 0; ng = 0; varbose = 0;
-if nargin == 2
-% if nargin == 4
+if nargin == 6
     if isfield(opts, 'varbose'); varbose = opts.varbose; end
     if isfield(opts, 'epsilon'); epsilon = opts.epsilon; end
     if isfield(opts, 'nmax'); nmax = opts.nmax; end
 end
 
 tic
-
-% [funf,gradf] = @(x)fx(x)
-% [func,gradc] = @(x)cx(x)
 
 [n,L] = size(X0);
 for j=1:L
@@ -83,7 +77,7 @@ while nit < nmax
         if (Uk(j,nit+1) > hat_u + eps_u) && (Vk(j,nit+1) > hat_v) && nit > 0% && length(setdiff(J_old,union(Jk_opt,J_succeed)))==1
             if length(setdiff(J_old,union(J_fail,J_succeed))) > 1
                 Jk_fea = union(Jk_fea,j);
-                J_fail = union(J_fail,j);
+                % J_fail = union(J_fail,j);
                 continue
             end
         end
@@ -110,14 +104,13 @@ while nit < nmax
         if varbose == 2
             fprintf('%2d & %2d & %.2e & %.2f & %.4e & %.4e & %.4f\n',nit,j,norm(dk,'inf'),alpha,shift.lkv_dkopt,vxnew,fxnew);
         end
-
         % lkv = shift.lkv_dkopt;
         % uxold = lkv/norm(dk);
         % norm(uxold - Uk(j,nit+1)) % 不相等
         % Data_table(nit+1,:) = [nit,fxold,vxold,norm(dk),lkv,uxold]
         % Data_table(nit+1,:) = [nit,fxold,vxold,norm(dk),lkv,Uk(j,nit+1)]
         % fprintf('%d & %.4f & %.e & %.0e & %.e & %.0e \\\\\n',nit,fxold,vxold,norm(dk),lkv,uxold);
-        if alpha <= 1e-3
+        if alpha <= 1e-6
             if abs(fxold-fxnew)/abs(fxnew)<1e-5 && vxnew < 1e-5
                 J_succeed = union(J_succeed,j);
             else
@@ -151,22 +144,38 @@ end
 m = length(Cxold{1});
 J_feasible = find(Vxold(J_succeed)<1e-3);
 [fx,J] = min(Fxold(J_succeed(J_feasible)));
-if isempty(J)
-    vx = min(Vxold);
-    J_feasible = find(Vxold == vx);
-    J = J_feasible(1);
-    fx = Fxold(J);
-    x = Xold{J};
-else
-    vx = Vxold(J_succeed(J_feasible(J)));
-    x = Xold{J};
+if length(J_fail) < L && nit < nmax
+    if isempty(J) % Infeasible Stationary Points
+        vx = min(Vxold);
+        J_feasible = find(Vxold == vx);
+        J = J_feasible(1);
+        fx = Fxold(J);
+        x = Xold{J};
+        Alg_flag = 1;
+    else % KKT Points
+        vx = Vxold(J_succeed(J_feasible(J)));
+        x = Xold{J};
+        Alg_flag = 2;
+    end
+elseif length(J_fail) == L % Algorithm Fails for Finding alpha_k or d_k
+    fx = Fxold(j);
+    vx = Vxold(j);
+    x = Xold{j};
+    Alg_flag = -1;
+elseif nit == nmax  % Algorithm Fails for Reaching Maximum Iterations
+    fx = Fxold(j);
+    vx = Vxold(j);
+    x = Xold{j};
+    Alg_flag = 0;
 end
+
 output.m = m;
 output.vx = vx;
 output.nit = nit;
 output.nf = nf;
 output.ng = ng;
 output.time = toc;
+output.exitflag = Alg_flag;
 end
 
 
