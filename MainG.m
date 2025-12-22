@@ -32,6 +32,7 @@ for idx = 1:13
     else
         % run("MainNEQ.m")
         [x,fx,output] = FMSQP(X0);
+        % [x,fx,output] = FMSQP(fx,cx,X0,opts);
         fprintf('       Numerical f(x): ')
         fprintf('%.4f ',fx);
         Example{idx}.f_num = fx;
@@ -55,5 +56,11 @@ for idx = 1:13
     end
 end
 
-
-
+function [f,gf] = fx(x,funf,gradf)
+f = funf(x);
+gf = gradf(x);
+end
+function [c,gc] = cx(x,func,gradc)
+c = func(x);
+gc = gradc(x);
+end

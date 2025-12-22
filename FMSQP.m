@@ -1,14 +1,20 @@
 function [x,fx,output] = FMSQP(X0,opts)
+% [x,fval,exitflag,output,lambda] = NPFopt(funf,func,x0,MF,opts)
+% function [x,fval,exitflag,output,lambda] = FMSQP(fx,cx,X0,opts)
 gamma = 0.6; eps_u = 10; eta = 1e-3; epsilon = 1e-5; 
 nmax = 500; sigma0 = 1; sigma = sigma0; 
 nit = 0; nf = 0; ng = 0; varbose = 0;
 if nargin == 2
+% if nargin == 4
     if isfield(opts, 'varbose'); varbose = opts.varbose; end
     if isfield(opts, 'epsilon'); epsilon = opts.epsilon; end
     if isfield(opts, 'nmax'); nmax = opts.nmax; end
 end
 
 tic
+
+% [funf,gradf] = @(x)fx(x)
+% [func,gradc] = @(x)cx(x)
 
 [n,L] = size(X0);
 for j=1:L
