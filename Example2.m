@@ -4,11 +4,12 @@ addpath(Path);
 cd Ex5.1
 fid = fopen("Output_Loop.txt",'a');
 opts.epsilon = 1e-4;
-for t = [1,5] % [1,5,10,50,100]
+% for t = [1,5]
+for t = [1,5,10,50,100]
     Fx_multi = [];
     Fx_single = [];
     n = 2;
-    Nmax = 10; % 1000
+    Nmax = 1000; % 1000
     toc_multi = 0;
     nit_multi = zeros(Nmax,1);
     nf_multi = zeros(Nmax,1);
@@ -21,7 +22,6 @@ for t = [1,5] % [1,5,10,50,100]
         L = 2;
         rng('shuffle');
         X0 = t*rand(n,L)-2*t;
-        % [~,Fx,output] = FMSQP(X0,opts);
         [~,Fx,output] = FMSQP(@funf,@gradf,@func,@gradc,X0,opts);
         toc_multi = toc_multi + output.time;
         nit_multi(Nit) = output.nit;
@@ -36,7 +36,6 @@ for t = [1,5] % [1,5,10,50,100]
         L = 1;
         rng('shuffle');
         X0 = t*rand(n,L)-2*t;
-        % [~,Fx,output] = FMSQP(X0,opts);
         [~,Fx,output] = FMSQP(@funf,@gradf,@func,@gradc,X0,opts);
         toc_single = toc_single + output.time;
         nit_single(Nit) = output.nit;

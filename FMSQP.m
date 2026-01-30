@@ -1,5 +1,6 @@
 function [x,fx,output] = FMSQP(funf,gradf,func,gradc,X0,opts)
-gamma = 0.6; eps_u = 10; eta = 1e-3; epsilon = 1e-5; 
+% function [xold,fxold,output] = NaturalSQP(fx,gfx,cx,gcx,xold)
+gamma = 0.6; eps_u = 10; eta = 1e-4; epsilon = 1e-5; 
 nmax = 500; sigma0 = 1; sigma = sigma0; 
 nit = 0; nf = 0; ng = 0; varbose = 0;
 if nargin == 6
@@ -11,6 +12,8 @@ end
 tic
 
 [n,L] = size(X0);
+J_succeed = [];
+J_fail = [];
 for j=1:L
     xold = X0(:,j);
     Xold{j} = xold;
@@ -18,30 +21,40 @@ for j=1:L
     Cxold{j} = func(xold); Gcxold{j} = gradc(xold);
     Vxold(j) = norm(max(Cxold{j},0),'inf');
     Bk{j} = eye(n); Hk{j} = eye(n); Sigma(j) = sigma;
+    if isnan(Fxold(j)) || any(isnan(Gfxold{j})) || any(isnan(Cxold{j})) || any(any(isnan(Gcxold{j})))
+        J_fail = union(J_fail,j);
+    end
+    if isinf(Fxold(j)) || any(isinf(Gfxold{j})) || any(isinf(Cxold{j})) || any(any(isinf(Gcxold{j})))
+        J_fail = union(J_fail,j);
+    end
 end
+J_old = setdiff(1:L,J_fail);
 epsM = 1e-4; beta = 20;
 Jmax = floor(log(max(Vxold+0.1)/epsM)/log(beta));
 M = beta.^(1:Jmax)*epsM;
 M = [0,M];
 
-J_succeed = [];
-J_fail = [];
-J_old = 1:L;
 Vcut = [];
 Data_table = [];
+nit_pass = 10;
 while nit < nmax
     Jk_opt = [];
+    % J_old1 = J_old
     Vcut = Vxold;
     for i=1:length(M)-1
         I1 = find(Vcut>=M(i));
         I2 = find(Vcut<=M(i+1));
-        Iv = setdiff(intersect(I1,I2),J_fail);
-        if ~isempty(Iv) && length(Iv) >= 2 && nit > 0
+        % Iv = setdiff(intersect(I1,I2),J_fail);
+        Iv = union(intersect(I1,I2),J_succeed);
+        if ~isempty(Iv) && length(Iv) >= 2 && nit > nit_pass
             F_ki = min(Fxold(Iv));
-            If = find(Fxold>F_ki);
+            If = find(Fxold>F_ki*1.01);
+            % I = intersect(If,Iv);
+            % Jk_opt = union(Jk_opt,I);
+            % J_fail = union(J_fail,I);
             I = intersect(Iv,If);
-            Jk_opt = union(Jk_opt,I);
-            J_fail = union(J_fail,I);
+            Jk_opt = union(Jk_opt,I(2:end));
+            J_fail = union(J_fail,I(2:end));
         end
     end
     for j = setdiff(J_old,Jk_opt)
@@ -74,10 +87,10 @@ while nit < nmax
     hat_v = mean(Vk(:,nit+1));
     Jk_fea = [];
     for j = setdiff(J_old,union(Jk_opt,J_succeed))
-        if (Uk(j,nit+1) > hat_u + eps_u) && (Vk(j,nit+1) > hat_v) && nit > 0% && length(setdiff(J_old,union(Jk_opt,J_succeed)))==1
+        if (Uk(j,nit+1) > hat_u + eps_u) && (Vk(j,nit+1) > hat_v) && nit > nit_pass% && length(setdiff(J_old,union(Jk_opt,J_succeed)))==1
             if length(setdiff(J_old,union(J_fail,J_succeed))) > 1
                 Jk_fea = union(Jk_fea,j);
-                % J_fail = union(J_fail,j);
+                J_fail = union(J_fail,j);
                 continue
             end
         end
@@ -125,10 +138,22 @@ while nit < nmax
         s = xnew - xold;
         lambda = Lambda{j};
         q = gfxnew + gcxnew*lambda - ( gfxold + gcxold*lambda);
-        Bk{j} = bfgs(Bk{j},s,q);
-        mm = eig(Bk{j});
-        if cond(Bk{j})>1e+6; Bk{j}=eye(n); end
-        if min(mm)<1e-6; Bk{j} = Bk{j}+eye(n); end
+        % Bk{j} = bfgs(Bk{j},s,q);
+        % mm = eig(Bk{j});
+        % if cond(Bk{j})>1e+6; Bk{j}=eye(n); end
+        % if min(mm)<1e-6; Bk{j} = Bk{j}+eye(n); end
+        if cond(bfgs(Bk{j},s,q)) < 1e17
+            Bk{j} = bfgs(Bk{j},s,q);
+        else
+            Bk{j} = eye(n);
+        end
+        if isnan(Bk{j}); Bk{j} = eye(n); end
+        if isnan(fxnew) || any(isnan(gfxnew)) || any(isnan(cxnew)) || any(any(isnan(gcxnew)))
+            J_fail = union(J_fail,j);
+        end
+        if isinf(fxnew) || any(isinf(gfxnew)) || any(isinf(cxnew)) || any(any(isinf(gcxnew)))
+            J_fail = union(J_fail,j);
+        end
         xold = xnew;
         fxold = fxnew; gfxold = gfxnew;
         cxold = cxnew; gcxold = gcxnew;
@@ -138,13 +163,24 @@ while nit < nmax
         Cxold{j} = cxold; Gcxold{j} = gcxold;
         Vxold(j) = vxold;
     end
+    % J_old2 = J_old
     J_old = setdiff(J_old,union(J_fail,J_succeed));
+    % J_succeed
+    % J_fail
+    % J_old3 = J_old
     nit = nit + 1;
+    % if ~isempty(J_succeed)
+    %     break
+    % end
 end
+% vxold,fxold,alpha
 m = length(Cxold{1});
 J_feasible = find(Vxold(J_succeed)<1e-3);
 [fx,J] = min(Fxold(J_succeed(J_feasible)));
-if length(J_fail) < L && nit < nmax
+J = J_succeed(J_feasible(J));
+% Fxold
+if ~isempty(J_succeed)
+% if length(J_fail) < L && nit < nmax
     if isempty(J) % Infeasible Stationary Points
         vx = min(Vxold);
         J_feasible = find(Vxold == vx);
@@ -153,7 +189,9 @@ if length(J_fail) < L && nit < nmax
         x = Xold{J};
         Alg_flag = 1;
     else % KKT Points
-        vx = Vxold(J_succeed(J_feasible(J)));
+        % vx = Vxold(J_succeed(J_feasible(J)));
+        fx = fx;
+        vx = Vxold(J);
         x = Xold{J};
         Alg_flag = 2;
     end
@@ -169,13 +207,17 @@ elseif nit == nmax  % Algorithm Fails for Reaching Maximum Iterations
     Alg_flag = 0;
 end
 
-output.m = m;
-output.vx = vx;
+Time = toc;
+fprintf('nit = %4.0d, nf = %4.0d, ng = %4.0d, f = %12.4f, v = %.2e\n',nit, nf,ng,fx,vx);
+output.exitflag = Alg_flag;
 output.nit = nit;
 output.nf = nf;
 output.ng = ng;
-output.time = toc;
-output.exitflag = Alg_flag;
+output.fx = fx;
+output.vx = vx;
+output.time = Time;
+output.m = m;
+output.n = n;
 end
 
 
@@ -200,6 +242,7 @@ d = optimvar('d',n,1);
 r = optimvar('r',1,1);
 Sol0.d = zeros(n,1);
 Sol0.r = zeros(1,1);
+% Bk = eye(n)*(1e-6);
 prob.Objective = r+0.5*d'*Bk*d;
 prob.Constraints.c3 = cxold+gcxold'*d<=r;
 prob.Constraints.c4 = r>=0;
