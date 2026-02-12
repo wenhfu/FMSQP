@@ -1,6 +1,6 @@
 # FMSQP.m — A MATLAB Filter-based Multi‑start SQP Solver for Nonlinear Optimization Problems
 
-> Wenhao Fu and Yu‑Hong Dai, *“The Newton framework for potentially infeasible nonlinear optimization and its application in a multi-start SQP algorithm”*.
+> Wenhao Fu and Yu‑Hong Dai, *“The Newton framework for potentially infeasible nonlinear optimization: Local convergence and application in a multi-start SQP algorithm”*.
 
 This repository contains **FMSQP.m**, a MATLAB implementation of a **Sequential Quadratic Programming (SQP)** solver tailored for nonlinear optimization with **inequality constraints only**. The method supports **multiple starting points** and uses a **filter technique** to improve global convergence, especially to escape infeasible stationary points or poor local minima.
 
@@ -163,5 +163,6 @@ See the [LICENSE](LICENSE) file for full terms.
 * **E-mail**: wenhfu@usts.edu.cn
 * Contributions welcome! Feel free to open issues or pull requests to improve the multi-start logic, filter strategy, or performance.
 * 2026.2.12
+
 
 
