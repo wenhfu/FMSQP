@@ -2,14 +2,17 @@ clear;clc
 Path = pwd;
 addpath(Path);
 cd Ex5.1
-fid = fopen("Output_Loop.txt",'a');
+n = 2;
+Nmax = 1000; % 1000
 opts.epsilon = 1e-4;
-% for t = [1,5]
-for t = [1,5,10,50,100]
+opts.nit_pass = 2;
+fid = fopen("Output_Loop.txt",'a');
+fprintf(fid,'\nTest for Nmax = %3d, nit_pass = %2d, epsilon = %.0e :\n',Nmax,opts.nit_pass,opts.epsilon);
+T = [1,5,10,50,100];
+% T = [10,50,100]
+for t = T
     Fx_multi = [];
     Fx_single = [];
-    n = 2;
-    Nmax = 1000; % 1000
     toc_multi = 0;
     nit_multi = zeros(Nmax,1);
     nf_multi = zeros(Nmax,1);

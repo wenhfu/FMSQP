@@ -1,12 +1,13 @@
 function [x,fx,output] = FMSQP(funf,gradf,func,gradc,X0,opts)
 % function [xold,fxold,output] = NaturalSQP(fx,gfx,cx,gcx,xold)
-gamma = 0.6; eps_u = 10; eta = 1e-4; epsilon = 1e-5; 
+gamma = 0.6; eps_u = 10; eta = 1e-4; epsilon = 1e-5; nit_pass = 10;
 nmax = 500; sigma0 = 1; sigma = sigma0; 
 nit = 0; nf = 0; ng = 0; varbose = 0;
 if nargin == 6
     if isfield(opts, 'varbose'); varbose = opts.varbose; end
     if isfield(opts, 'epsilon'); epsilon = opts.epsilon; end
     if isfield(opts, 'nmax'); nmax = opts.nmax; end
+    if isfield(opts, 'nit_pass'); nit_pass = opts.nit_pass; end
 end
 
 tic
@@ -36,7 +37,6 @@ M = [0,M];
 
 Vcut = [];
 Data_table = [];
-nit_pass = 10;
 while nit < nmax
     Jk_opt = [];
     % J_old1 = J_old
@@ -208,7 +208,7 @@ elseif nit == nmax  % Algorithm Fails for Reaching Maximum Iterations
 end
 
 Time = toc;
-fprintf('nit = %4.0d, nf = %4.0d, ng = %4.0d, f = %12.4f, v = %.2e\n',nit, nf,ng,fx,vx);
+% fprintf('nit = %4.0d, nf = %4.0d, ng = %4.0d, f = %12.4f, v = %.2e\n',nit, nf,ng,fx,vx);
 output.exitflag = Alg_flag;
 output.nit = nit;
 output.nf = nf;
