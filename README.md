@@ -1,4 +1,4 @@
-# FMSQP.m — A MATLAB Filter-based Multi‑start SQP Solver for Inequality‑Only Problems
+# FMSQP.m — A MATLAB Filter-based Multi‑start SQP Solver for Nonlinear Optimization Problems
 
 > Wenhao Fu and Yu‑Hong Dai, *“The Newton framework for potentially infeasible nonlinear optimization and its application in a multi-start SQP algorithm”*.
 
@@ -43,15 +43,20 @@ Key properties:
 Call format:
 
 ```matlab
-[x, fx, output] = FMSQP(X0, opts);
+[x, fx, output] = FMSQP(funf,gradf,func,gradc,X0,opts);
 ````
 
-* `X0` — initial points, an $n \times J$ matrix where each column is a different starting point (multi-start), $J$ is the number of iterate sequences.
-* `opts` — options struct with fields:
+* `funf` — Function handle that returns the objective function value at a point `x`, i.e., `f(x)`.
+* `gradf` — Function handle that returns the gradient of the objective function at `x`, i.e., `\nabla f(x)`.
+* `func` — Function handle that returns the constraint function values at `x`, i.e., `c(x)`.
+* `gradc` — Function handle that returns the gradients (Jacobian) of the constraint functions at `x`, i.e., `\nabla c(x)`.
+* `X0` — Initial points, an $n \times J$ matrix where each column is a different starting point (multi-start), $n$ is the number of variables and $J$ is the number of iterate sequences.
+* `opts` — Options struct with fields:
 
-  * `opts.varbose` (verbosity, default `0`)
-  * `opts.epsilon` (tolerance, default `1e-5`)
-  * `opts.nmax` (maximum number of iterations, default `500`)
+  * `opts.varbose` (Verbosity level, default `0`)
+  * `opts.epsilon` (Stopping tolerance for optimality and feasibility measures, default `1e-5`)
+  * `opts.nmax` (Maximum number of iterations, default `500`)
+  * `opts.nit_pass` (Number of initial iterations performed before activating the filter technique, default `500`)
 
 Output:
 
@@ -64,19 +69,36 @@ Output:
 ## 4. Example Usage
 
 ```matlab
+% Objective function
+funf = @(x) (x(1)-1)^2 + (x(2)-2)^2;
+
+% Gradient of objective
+gradf = @(x) [2*(x(1)-1);
+              2*(x(2)-2)];
+
+% Constraint function: c(x) <= 0
+func = @(x) x(1) + x(2) - 1;
+
+% Gradient of constraint
+gradc = @(x) [1; 1];
+
 % Define multiple initial points (each column is one point)
 X0 = [0, 1, 0, 1;
       0, 0, 1, 1];
 
+% Options
 opts.varbose = 1;
 opts.epsilon = 1e-6;
 opts.nmax = 300;
+opts.nit_pass = 10;
 
-[x, fx, output] = FMSQP(X0, opts);
+% Call solver
+[x, fx, output] = FMSQP(funf, gradf, func, gradc, X0, opts);
 
-fprintf('Found x = [%g, %g]\n', x(1), x(2));
-fprintf('f(x) = %g\n', fx);
-fprintf('Constraint violation: %g\n', output.vx);
+% Print result (first sequence as example)
+fprintf('Found x = [%g, %g]\n', x(1,1), x(2,1));
+fprintf('f(x) = %g\n', fx(1));
+fprintf('Constraint violation: %g\n', output.vx(1));
 ```
 
 ---
@@ -104,12 +126,12 @@ This **multi-start + filter** strategy provides good robustness: the method can 
 
 ## 6. Required User-Defined Functions
 
-You should provide these four MATLAB files in the same directory / on path:
+The user must provide the following four function handles (or corresponding `.m` files) to define the optimization problem:
 
-* `funf.m` — computes $f(x)$
-* `gradf.m` — computes $\nabla f(x)$
-* `func.m` — computes constraint vector $c(x) \le 0$
-* `gradc.m` — computes Jacobian $\nabla c(x)$ (each column is gradient of one constraint)
+* `funf` — Returns the objective function value $f(x)$.
+* `gradf` — Returns the gradient of the objective function $\nabla f(x)$.
+* `func` — Returns the constraint vector $c(x)$.
+* `gradc` — Returns the Jacobian matrix of the constraints $\nabla c(x)$ (each column is gradient of one constraint).
 
 ---
 
@@ -123,6 +145,8 @@ The `output` struct returned by `FMSQP` includes:
 * `output.nf` — number of function evaluations
 * `output.ng` — number of gradient evaluations
 * `output.time` — elapsed time (in seconds)
+* `output.m`— number of constraints
+* `output` — number of variables
 
 ---
 
@@ -138,4 +162,6 @@ See the [LICENSE](LICENSE) file for full terms.
 * **Coded by**: Wenhao Fu
 * **E-mail**: wenhfu@usts.edu.cn
 * Contributions welcome! Feel free to open issues or pull requests to improve the multi-start logic, filter strategy, or performance.
+* 2026.2.12
+
 
